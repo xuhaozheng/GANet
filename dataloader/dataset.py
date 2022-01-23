@@ -237,24 +237,24 @@ def load_kitti2015_data(file_path, current_file):
     return temp_data
 def load_scared_data(file_path,current_file):
     """ load current file from the list"""
-    print("--------file_path",file_path)
-    print("--------current file path",current_file)
+    # print("--------file_path",file_path)
+    # print("--------current file path",current_file)
     line = current_file.split()
     folder = line[0][62:]
     frame_idx = line[1]
     side = line[2]
     current_file = get_image_path(file_path, folder, int(frame_idx), 'l')
-    print("--------changed current file",current_file)
+    # print("--------changed current file",current_file)
     filename = current_file[0: len(current_file) - 1]
     left = Image.open(filename)
 
     current_file = get_image_path(file_path, folder, int(frame_idx), 'r')
-    print("--------changed current file",current_file)
+    # print("--------changed current file",current_file)
     filename = current_file[0: len(current_file) - 1]
     right = Image.open(filename)
 
     current_file = get_image_path(file_path, folder, int(frame_idx), 'l', label=True)
-    print("--------changed current file",current_file)
+    # print("--------changed current file",current_file)
     filename = current_file[0: len(current_file) - 1]
 
     disp_left = Image.open(filename).convert('L')
@@ -296,7 +296,7 @@ def get_image_path(data_path, folder, frame_index, side, label=False):
             label_path = 'image'
         side_id = {'l': '02', 'r': '03'}[side]
         f_str = "{:06d}.jpg ".format(frame_index)
-        print("----foler",folder)
+        # print("----foler",folder)
         image_path = os.path.join(data_path, folder, label_path, 'image_' + side_id, f_str)
         return image_path
 
