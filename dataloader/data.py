@@ -1,5 +1,6 @@
 from .dataset import DatasetFromList
-
+# from train_original import train
+# from .scared_dataset import scared_dataset
 def get_training_set(data_path, train_list, crop_size=[256,256], left_right=False, kitti=False, kitti2015=False, shift=0):
     return DatasetFromList(data_path, train_list,
                              crop_size, True, left_right, kitti, kitti2015, shift)

@@ -4,11 +4,14 @@ import skimage.io
 import skimage.transform
 
 from PIL import Image
+import PIL.Image as pil
 import numpy as np
 import random
 from struct import unpack
 import re
 import sys
+import os
+from torchvision import transforms
 def readPFM(file): 
     with open(file, "rb") as f:
             # Line 1: PF=>RGB (3 channels), Pf=>Greyscale (1 channel)
@@ -47,6 +50,8 @@ def readPFM(file):
 
 def train_transform(temp_data, crop_height, crop_width, left_right=False, shift=0):
     _, h, w = np.shape(temp_data)
+
+    print("h:{} w:{} crop height:{} crop width:{}".format(h,w,crop_height,crop_width))
     
     if h > crop_height and w <= crop_width:
         temp = temp_data
@@ -157,6 +162,7 @@ def load_kitti_data(file_path, current_file):
     filename = file_path+'disp_occ/' + current_file[0: len(current_file) - 1]
 
     disp_left = Image.open(filename)
+
     temp = np.asarray(disp_left)
     size = np.shape(left)
 
@@ -166,6 +172,9 @@ def load_kitti_data(file_path, current_file):
     left = np.asarray(left)
     right = np.asarray(right)
     disp_left = np.asarray(disp_left)
+    print("left shape",left.shape)
+    print("right shape",right.shape)
+    print("disp shape",disp_left.shape)
     r = left[:, :, 0]
     g = left[:, :, 1]
     b = left[:, :, 2]
@@ -226,8 +235,70 @@ def load_kitti2015_data(file_path, current_file):
     temp_data[6, :, :] = temp / 256.
     
     return temp_data
+def load_scared_data(file_path,current_file):
+    """ load current file from the list"""
+    print("--------file_path",file_path)
+    print("--------current file path",current_file)
+    line = current_file.split()
+    folder = line[0][62:]
+    frame_idx = line[1]
+    side = line[2]
+    current_file = get_image_path(file_path, folder, int(frame_idx), 'l')
+    print("--------changed current file",current_file)
+    filename = current_file[0: len(current_file) - 1]
+    left = Image.open(filename)
 
+    current_file = get_image_path(file_path, folder, int(frame_idx), 'r')
+    print("--------changed current file",current_file)
+    filename = current_file[0: len(current_file) - 1]
+    right = Image.open(filename)
 
+    current_file = get_image_path(file_path, folder, int(frame_idx), 'l', label=True)
+    print("--------changed current file",current_file)
+    filename = current_file[0: len(current_file) - 1]
+
+    disp_left = Image.open(filename).convert('L')
+    temp = np.asarray(disp_left)
+    size = np.shape(left)
+
+    height = size[0]
+    width = size[1]
+    temp_data = np.zeros([8, height, width], 'float32')
+    left = np.asarray(left)
+    right = np.asarray(right)
+    disp_left = np.asarray(disp_left)
+    r = left[:, :, 0]
+    g = left[:, :, 1]
+    b = left[:, :, 2]
+ 
+    temp_data[0, :, :] = (r-np.mean(r[:])) / np.std(r[:])
+    temp_data[1, :, :] = (g-np.mean(g[:])) / np.std(g[:])
+    temp_data[2, :, :] = (b-np.mean(b[:])) / np.std(b[:])
+    r=right[:, :, 0]
+    g=right[:, :, 1]
+    b=right[:, :, 2]	
+
+    temp_data[3, :, :] = (r - np.mean(r[:])) / np.std(r[:])
+    temp_data[4, :, :] = (g - np.mean(g[:])) / np.std(g[:])
+    temp_data[5, :, :] = (b - np.mean(b[:])) / np.std(b[:])
+    temp_data[6: 7, :, :] = width * 2
+    temp_data[6, :, :] = disp_left[:, :]
+    temp = temp_data[6, :, :]
+    temp[temp < 0.1] = width * 2 * 256
+    temp_data[6, :, :] = temp / 256.
+
+    return temp_data
+
+def get_image_path(data_path, folder, frame_index, side, label=False):
+        if label:
+            label_path = 'depth'
+        else:
+            label_path = 'image'
+        side_id = {'l': '02', 'r': '03'}[side]
+        f_str = "{:06d}.jpg ".format(frame_index)
+        print("----foler",folder)
+        image_path = os.path.join(data_path, folder, label_path, 'image_' + side_id, f_str)
+        return image_path
 
 class DatasetFromList(data.Dataset): 
     def __init__(self, data_path, file_list, crop_size=[256, 256], training=True, left_right=False, kitti=False, kitti2015=False, shift=0):
@@ -241,12 +312,20 @@ class DatasetFromList(data.Dataset):
         self.crop_width = crop_size[1]
         self.left_right = left_right
         self.kitti = kitti
+        # self.kitti = True
         self.kitti2015 = kitti2015
         self.shift = shift
+        self.scared = True
+        ### image size for SCARED image
+        self.height = 1024
+        self.width = 1280
+        self.resize = transforms.Resize((self.height, self.width),interpolation=self.interp)
 
     def __getitem__(self, index):
     #    print self.file_list[index]
-        if self.kitti: #load kitti dataset
+        if self.scared:
+            temp_data = load_scared_data(self.data_path,self.file_list[index])
+        elif self.kitti: #load kitti dataset
             temp_data = load_kitti_data(self.data_path, self.file_list[index])
         elif self.kitti2015: #load kitti2015 dataset
             temp_data = load_kitti2015_data(self.data_path, self.file_list[index])

@@ -2,7 +2,7 @@ from __future__ import print_function
 import argparse
 from math import log10
 
-from libs.GANet.modules.GANet import MyLoss2
+# from libs.GANet.modules.GANet import MyLoss2
 import sys
 import shutil
 import os
@@ -19,9 +19,9 @@ from dataloader.data import get_training_set, get_test_set
 
 # Training settings
 parser = argparse.ArgumentParser(description='PyTorch GANet Example')
-parser.add_argument('--crop_height', type=int, required=True, help="crop height")
+parser.add_argument('--crop_height', type=int, default=192, help="crop height")
 parser.add_argument('--max_disp', type=int, default=192, help="max disp")
-parser.add_argument('--crop_width', type=int, required=True, help="crop width")
+parser.add_argument('--crop_width', type=int, help="crop width")
 parser.add_argument('--resume', type=str, default='', help="resume from saved model")
 parser.add_argument('--left_right', type=int, default=0, help="use right view for training. Default=False")
 parser.add_argument('--batchSize', type=int, default=1, help='training batch size')
@@ -36,7 +36,9 @@ parser.add_argument('--kitti', type=int, default=0, help='kitti dataset? Default
 parser.add_argument('--kitti2015', type=int, default=0, help='kitti 2015? Default=False')
 # parser.add_argument('--data_path', type=str, default='/ssd1/zhangfeihu/data/stereo/', help="data root")
 parser.add_argument('--data_path', type=str, default='/media/terryxu/My Passport/SCARED/', help="data root")
+# parser.add_argument('--data_path', type=str, default='/media/terryxu/My Passport/kitti/data_stereo_flow/training/', help="data root")
 # parser.add_argument('--training_list', type=str, default='./lists/sceneflow_train.list', help="training list")
+# parser.add_argument('--training_list', type=str, default='./lists/kitti2015_train.list', help="training list")
 parser.add_argument('--training_list', type=str, default='./Endovis_val_split/train_files.txt', help="training list")
 parser.add_argument('--val_list', type=str, default='./lists/sceneflow_test_select.list', help="validation list")
 parser.add_argument('--save_path', type=str, default='./checkpoint/', help="location to save models")
@@ -45,12 +47,12 @@ parser.add_argument('--model', type=str, default='GANet_deep', help="model to tr
 opt = parser.parse_args()
 
 print(opt)
-if opt.model == 'GANet11':
-    from models.GANet11 import GANet
-elif opt.model == 'GANet_deep':
-    from models.GANet_deep import GANet
-else:
-    raise Exception("No suitable model found ...")
+# if opt.model == 'GANet11':
+#     from models.GANet11 import GANet
+# elif opt.model == 'GANet_deep':
+#     from models.GANet_deep import GANet
+# else:
+#     raise Exception("No suitable model found ...")
     
 cuda = opt.cuda
 #cuda = True
@@ -63,6 +65,7 @@ if cuda:
 
 print('===> Loading datasets')
 train_set = get_training_set(opt.data_path, opt.training_list, [opt.crop_height, opt.crop_width], opt.left_right, opt.kitti, opt.kitti2015, opt.shift)
+train_set[1]
 test_set = get_test_set(opt.data_path, opt.val_list, [576,960], opt.left_right, opt.kitti, opt.kitti2015)
 training_data_loader = DataLoader(dataset=train_set, num_workers=opt.threads, batch_size=opt.batchSize, shuffle=True, drop_last=True)
 testing_data_loader = DataLoader(dataset=test_set, num_workers=opt.threads, batch_size=opt.testBatchSize, shuffle=False)
@@ -181,35 +184,35 @@ def adjust_learning_rate(optimizer, epoch):
 
 if __name__ == '__main__':
     error=100
-    for epoch in range(1, opt.nEpochs + 1):
-#        if opt.kitti or opt.kitti2015:
-        adjust_learning_rate(optimizer, epoch)
-        train(epoch)
-        is_best = False
-#        loss=val()
-#        if loss < error:
-#            error=loss
-#            is_best = True
-        if opt.kitti or opt.kitti2015:
-            if epoch%50 == 0 and epoch >= 300:
-                save_checkpoint(opt.save_path, epoch,{
-                        'epoch': epoch,
-                        'state_dict': model.state_dict(),
-                        'optimizer' : optimizer.state_dict(),
-                    }, is_best)
-        else:
-            if epoch>=8:
-                save_checkpoint(opt.save_path, epoch,{
-                        'epoch': epoch,
-                        'state_dict': model.state_dict(),
-                        'optimizer' : optimizer.state_dict(),
-                    }, is_best)
+#     for epoch in range(1, opt.nEpochs + 1):
+# #        if opt.kitti or opt.kitti2015:
+#         adjust_learning_rate(optimizer, epoch)
+#         train(epoch)
+#         is_best = False
+# #        loss=val()
+# #        if loss < error:
+# #            error=loss
+# #            is_best = True
+#         if opt.kitti or opt.kitti2015:
+#             if epoch%50 == 0 and epoch >= 300:
+#                 save_checkpoint(opt.save_path, epoch,{
+#                         'epoch': epoch,
+#                         'state_dict': model.state_dict(),
+#                         'optimizer' : optimizer.state_dict(),
+#                     }, is_best)
+#         else:
+#             if epoch>=8:
+#                 save_checkpoint(opt.save_path, epoch,{
+#                         'epoch': epoch,
+#                         'state_dict': model.state_dict(),
+#                         'optimizer' : optimizer.state_dict(),
+#                     }, is_best)
 
 
-    save_checkpoint(opt.save_path, opt.nEpochs,{
-            'epoch': opt.nEpochs,
-            'state_dict': model.state_dict(),
-            'optimizer' : optimizer.state_dict(),
-        }, is_best)
+#     save_checkpoint(opt.save_path, opt.nEpochs,{
+#             'epoch': opt.nEpochs,
+#             'state_dict': model.state_dict(),
+#             'optimizer' : optimizer.state_dict(),
+#         }, is_best)
 
 
