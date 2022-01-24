@@ -317,6 +317,7 @@ class DatasetFromList(data.Dataset):
         self.shift = shift
         self.scared = True
         ### image size for SCARED image
+        self.interp = Image.ANTIALIAS
         self.height = 1024
         self.width = 1280
         self.resize = transforms.Resize((self.height, self.width),interpolation=self.interp)
