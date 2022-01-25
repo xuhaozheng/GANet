@@ -33,7 +33,9 @@ parser.add_argument('--data_path', type=str, required=True, help="data root")
 parser.add_argument('--test_list', type=str, required=True, help="training list")
 parser.add_argument('--save_path', type=str, default='./result/', help="location to save result")
 parser.add_argument('--model', type=str, default='GANet_deep', help="model to train")
-
+parser.add_argument('--left', type=str, help="left image path")
+parser.add_argument('--right', type=str, help="right image path")
+parser.add_argument('--save', type=str, help="save image path")
 opt = parser.parse_args()
 
 
@@ -139,19 +141,20 @@ def test(leftname, rightname, savename):
 
    
 if __name__ == "__main__":
-    file_path = opt.data_path
-    file_list = opt.test_list
-    f = open(file_list, 'r')
-    filelist = f.readlines()
-    for index in range(len(filelist)):
-        current_file = filelist[index]
-        if opt.kitti2015:
-            leftname = file_path + 'image_2/' + current_file[0: len(current_file) - 1]
-            rightname = file_path + 'image_3/' + current_file[0: len(current_file) - 1]
-        if opt.kitti:
-            leftname = file_path + 'colored_0/' + current_file[0: len(current_file) - 1]
-            rightname = file_path + 'colored_1/' + current_file[0: len(current_file) - 1]
+    # file_path = opt.data_path
+    # file_list = opt.test_list
+    # f = open(file_list, 'r')
+    # filelist = f.readlines()
+    # for index in range(len(filelist)):
+    #     current_file = filelist[index]
+    #     if opt.kitti2015:
+    #         leftname = file_path + 'image_2/' + current_file[0: len(current_file) - 1]
+    #         rightname = file_path + 'image_3/' + current_file[0: len(current_file) - 1]
+    #     if opt.kitti:
+    #         leftname = file_path + 'colored_0/' + current_file[0: len(current_file) - 1]
+    #         rightname = file_path + 'colored_1/' + current_file[0: len(current_file) - 1]
 
-        savename = opt.save_path + current_file[0: len(current_file) - 1]
-        test(leftname, rightname, savename)
+    #     savename = opt.save_path + current_file[0: len(current_file) - 1]
+    #     test(leftname, rightname, savename)
+    test(opt.left,opt.right,opt.save)
 
